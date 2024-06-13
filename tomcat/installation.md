@@ -136,4 +136,23 @@ startTomcat
       * It consists of all the `temp` files
   * `work`
       * Once we deploy the application in the webapps folder those apps generating some files(eg:jar, pom.xml,property) these are store in work directory
+
+      ## install web servers in Centos, redhat
+      ```bash
+      yum install httpd
+
+      apt install apache2 #for ubuntu
+      
+      ```
+
+      ## commands
+    ```bash
+
+    setsebool -P httpd_can_network_connect 1
+    setsebool -P httpd_can_network_connect 1
+    setsebool -P httpd_can_network_relay 1
+    setsebool -P httpd_graceful_shutdown 1
+    setsebool -P nis_enabled 1
+    systemctl restart httpd
+    ```
   
