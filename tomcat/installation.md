@@ -155,4 +155,109 @@ startTomcat
     setsebool -P nis_enabled 1
     systemctl restart httpd
     ```
-  
+
+    ### SonarQube
+     * It is a code quality tool
+     * It is a web based tool
+     * It will support to both open source as well as paid 
+     * It supports multiple `Data bases` 
+         * `MySql`
+         * `Oracle`
+     * SonarQube will not validate the logic of test cases
+     * It is self managed static code tool for continous code based inspection
+
+     ## Sonar Qube installatio
+     # create vm 
+     ```bash
+     gcloud compute instances create sonarqube  --zone=us-west4-b --machine-type=e2-medium  --create-disk=auto-delete=yes,boot=yes,device-name=sonarqube,image=projects/centos-cloud/global/images/centos-7-v20230615,mode=rw,size=20
+     ```
+ ## Install Openjdk 17, mvn 3.8.8 on Centos:
+```bash
+# https://techviewleo.com/install-java-openjdk-on-rocky-linux-centos/
+# Install Openjdk 17
+sudo yum -y install wget curl
+cd /opt/
+wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+tar xvf openjdk-17.0.2_linux-x64_bin.tar.gz
+sudo mv jdk-17.0.2/ /opt/jdk-17/
+vim ~/.bashrc
+  export JAVA_HOME=/opt/jdk-17
+  export PATH=$PATH:$JAVA_HOME/bin
+source ~/.bashrc
+echo $JAVA_HOME
+java --version
+
+# Install Maven 3.8.8
+cd /opt/
+# wget https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz
+wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+tar -xzvf apache-maven-3.8.8-bin.tar.gz
+vi ~/.bashrc
+  export PATH=$PATH:/opt/apache-maven-3.8.8/bin
+  export M2_HOME=/opt/apache-maven-3.8.8
+source ~/.bashrc
+mvn --version
+
+# For All Users
+---------------------- 
+vi /etc/profile
+  export JAVA_HOME=/opt/jdk-17
+  export PATH=$PATH:$JAVA_HOME/bin
+  export PATH=$PATH:/opt/apache-maven-3.8.8/bin
+  export M2_HOME=/opt/apache-maven-3.8.8
+
+source /etc/profile
+mvn --version     
+```
+### Sonarqube instaling
+```bash 
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.5.90363.zip
+yum install unzip -y
+mv sonarqube-9.9.5.90363 sonarqube-9.9
+```
+* by default Sonar will not be executed with `root` user
+* We need to create a `user` called as sonar and start the applicaiton with that user
+
+ ```bash
+ useradd sonar
+
+ #visudo
+sonar           ALL=(ALL)       NOPASSWD: ALL
+chown -R sonar:sonar /opt/sonarqube-9.9
+#chmod -R 775 /opt/sonarqube-9.9
+```
+- Once this is done we need run/start the sonar
+- sonarqube will be started by `sonar` user
+- we need to switch to sonar user
+
+```bash
+# switch sonar user
+
+su - sonar
+cd /opt/sonarqube-9.7
+cd bin
+cd linux-x86-64/
+sh sonar.sh start
+
+# To Verify status of sonarqube
+sh sonar.sh status
+```
+- Once the installation is successful, sonarqube can be acessible at port `9000`
+- It will ask for userid/passwd.
+    * By default sonarqube has created as userid as `admin` and password as `admin`
+    * Popup appears to change the password. Do change it and makesure u remember the password, as its difficult to get it back.
+
+## Create a sample maven project
+```bash
+# https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html
+mvn archetype:generate -DgroupId=com.sivaacademy.app -DartifactId=my-maven-app -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4 -DinteractiveMode=false
+# mvn compile > mvn package
+vi pom.xml
+<properties>
+  <sonar.host.url>http://34.125.87.116:9000/</sonar.host.url>
+  <sonar.login>admin</sonar.login>
+  <sonar.password>sonar1234</sonar.password>
+</properties>
+mvn sonar:sonar
+```
+
