@@ -211,8 +211,9 @@ mvn --version
 ```
 ### Sonarqube instaling
 ```bash 
-wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.5.90363.zip
 yum install unzip -y
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.5.90363.zip
+unzip sonarqube-9.9.5.90363.zip
 mv sonarqube-9.9.5.90363 sonarqube-9.9
 ```
 * by default Sonar will not be executed with `root` user
@@ -221,7 +222,7 @@ mv sonarqube-9.9.5.90363 sonarqube-9.9
  ```bash
  useradd sonar
 
- #visudo
+ visudo
 sonar           ALL=(ALL)       NOPASSWD: ALL
 chown -R sonar:sonar /opt/sonarqube-9.9
 #chmod -R 775 /opt/sonarqube-9.9
@@ -234,7 +235,7 @@ chown -R sonar:sonar /opt/sonarqube-9.9
 # switch sonar user
 
 su - sonar
-cd /opt/sonarqube-9.7
+cd /opt/sonarqube-9.9
 cd bin
 cd linux-x86-64/
 sh sonar.sh start
@@ -258,6 +259,65 @@ vi pom.xml
   <sonar.login>admin</sonar.login>
   <sonar.password>sonar1234</sonar.password>
 </properties>
+
+(or)
+vi pom.xml
+<properties>
+  <sonar.host.url>http://34.125.87.116:9000/</sonar.host.url>
+  <sonar.login>sqa_4d1dced90813806e1bf26b6ea4e3fba080e84507</sonar.login>
+</properties>
+--> In real time we will never use user name and password 
+--> we will be using something called as a "toke"
 mvn sonar:sonar
 ```
+## Instead of passwords we can use tokens well
+  * Create token
+  ```bash
+   Sonar > MyAccount > Security > Generate Tokens[name: ; type:Global analysis token;exp: 30 days] > generate toke [sqa_4d1dced90813806e1bf26b6ea4e3fba080e84507]
+    or
+   Administration > Security > users 
+  ``` 
+--> When i say instead of using user and password i am using something called as `token` at the same time im also saying  that token is nothing but combination of user id and password 
 
+```bash
+mvn compile sonar:sonar -Dsonar.host.url=http://34.125.169.221:9000/ -Dsonar.login=sqa_4d1dced90813806e1bf26b6ea4e3fba080e84507
+
+--> in jenkins we can use credentials it is recommended 
+```
+# this command shows the available java versions
+```bash
+alternatives --config java
+```
+## sonar scan for Gradle project
+```bash
+# clone the git repo
+git clone https://github.com/GoogleCloudPlatform/cloud-ops-sandbox.git
+# switch to 
+csb_1220
+git checkout csb_1220
+cd cloud-ops-sandbox
+cd src/adservice
+
+# to build and test the app with gradle
+./gradle installDist
+
+# if you want to perform sonar scan for this Project
+# Create a project in sonarqube >> get the command from there along with the existing token
+# modify the build gradle file with the sonar plugin
+vi build.gradle
+plugins {
+    id "org.sonarqube" version "3.5.0.2730"  ## add this line in sonarqube > create project > manual > project key > use exit token > gradle
+    id 'com.google.protobuf' version '0.8.16'}
+# to run the below command to perform sonarscan for gradle
+./gradlew sonar   -Dsonar.projectKey=addservice   -Dsonar.host.url=http://34.16.187.109:9000 -Dsonarlogin=sqa_4d1dced90813806e1bf26b6ea4e3fba080e84507 
+# if we get any error with respect to java version install jdk 11 on the machine
+yum search jdk
+yum install java-11-openjdk.i686 -y
+# copy the relevant java path from the below location
+alternatives --config java
+
+# now we got the java 11 path pass on the java to gradle command
+./gradlew sonar   -Dsonar.projectKey=addservice   -Dsonar.host.url=http://public_url_sonar:9000 -Dsonarlogin=your_sonar_token -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-2.el7_9.i386
+
+# once the scan is perform go to sonar and verify your result
+```
