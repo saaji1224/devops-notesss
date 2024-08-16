@@ -197,7 +197,7 @@ vi ~/.bashrc
   export M2_HOME=/opt/apache-maven-3.8.8
 source ~/.bashrc
 mvn --version
-
+# mvn package -DskipTests
 # For All Users
 ---------------------- 
 vi /etc/profile
@@ -320,4 +320,158 @@ alternatives --config java
 ./gradlew sonar   -Dsonar.projectKey=addservice   -Dsonar.host.url=http://public_url_sonar:9000 -Dsonarlogin=your_sonar_token -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-2.el7_9.i386
 
 # once the scan is perform go to sonar and verify your result
+```
+# details of some options in sonarqube
+  * `Rules` : This are the things that are been based while your performing certain test and all 
+  * `Quality Profiles`: Collection of `Rules`
+  * `Quality Gates`
+## categary
+* Critical  ---> for production `0`
+* High
+* Medium
+* Low
+## Create Quality Profile
+  * go to sonar qube > Quality Profile > create >Create a blank quality profile > Language: java > Name: >create
+
+
+# Nexus
+* Nexus is a Artifact Repository
+* It can store both application artifacts as well as Container images as well
+* Its parent company is Sonatype Nexus
+* Nexus is been an alternative for JFROG
+* Nexus is a Opensource java based artifact based repo/manager
+* There are two types of nexus,which can be configured
+  * Nexus OSS (Open Source Software)
+  * Nexus Pro (Enterprise Edition)
+# Install Nexus on CentOs
+```bash 
+# Create a one server
+gcloud compute instances create nexusserver --zone=us-west4-b --machine-type=e2-medium --create-disk=auto-delete=yes,boot=yes,device-name=sonar,image=projects/centos-cloud/global/images/centos-7-v20221206,mode=rw,size=20
+
+# Install Java 1.8
+cd /opt
+yum install wget -y
+wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.rpm
+
+yum install jdk-8u131-linux-x64.rpm -y
+
+# Download Nexus 
+# TO get latest version use the below url
+# https://help.sonatype.com/repomanager3/product-information/download/download-archives---repository-manager-3
+wget https://download.sonatype.com/nexus/3/nexus-3.45.0-01-unix.tar.gz
+tar -xzvf nexus-3.45.0-01-unix.tar.gz
+mv nexus-3.45.0-01 /opt/nexus
+
+# Create a nexus user.
+# Nexus is not advised to run nexus service as a root user.
+# So, we are creating a  user called nexus and grant sudo access to manage nexus services.
+useradd nexus
+
+#Give the sudo access to nexus user
+
+visudo
+nexus ALL=(ALL) NOPASSWD: ALL
+
+#Change the owner and group permissions to /opt/nexus directory
+chown -R nexus:nexus /opt/nexus
+chmod -R 775 /opt/nexus
+#Change the owner and group permissions to /opt/sonatype-work directory.
+chown -R nexus:nexus /opt/sonatype-work
+chmod -R 775 /opt/sonatype-work
+
+#Open /opt/nexus/bin/nexus.rc file and  uncomment run_as_user parameter and set as nexus user.
+vi /opt/nexus/bin/nexus.rc
+run_as_user="nexus"
+
+#Create nexus as a service
+ln -s /opt/nexus/bin/nexus /etc/init.d/nexus
+
+#Switch as a nexus user and start the nexus service as follows.
+sudo su - nexus
+
+#Enable the nexus services
+sudo systemctl enable nexus
+
+#Start the nexus service
+sudo systemctl start nexus
+```
+# # Install Nexus on Ubuntu
+```bash
+# Install Java 
+apt install openjdk-8-jdk -y
+
+# COnfigure Maven 
+
+wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+tar xvf openjdk-17.0.2_linux-x64_bin.tar.gz
+sudo mv jdk-17.0.2/ /opt/jdk-17/
+
+# Install maven
+wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+tar -xvf apache-maven-3.8.8-bin.tar.gz
+
+vi /etc/profile
+export JAVA_HOME=/opt/jdk-17
+export PATH=$PATH:$JAVA_HOME/bin
+export PATH=$PATH:/opt/apache-maven-3.8.8/bin
+export M2_HOME=/opt/apache-maven-3.8.8
+
+source /etc/profile
+
+# Install/Configure Nexus 
+
+# Download Nexus 
+# TO get latest version use the below url
+# https://help.sonatype.com/repomanager3/product-information/download/download-archives---repository-manager-3
+wget https://download.sonatype.com/nexus/3/nexus-3.68.0-04-java8-unix.tar.gz
+tar -xvf nexus-3.68.0-04-java8-unix.tar.gz 
+mv nexus-3.45.0-01 /opt/nexus
+
+# Create a nexus user.
+# Nexus is not advised to run nexus service as a root user.
+# So, we are creating a  user called nexus and grant sudo access to manage nexus services.
+#useradd nexus
+adduser nexus
+#Give the sudo access to nexus user
+
+visudo
+nexus ALL=(ALL) NOPASSWD: ALL
+
+#Change the owner and group permissions to /opt/nexus directory
+chown -R nexus:nexus /opt/nexus
+chmod -R 775 /opt/nexus
+#Change the owner and group permissions to /opt/sonatype-work directory.
+chown -R nexus:nexus /opt/sonatype-work
+chmod -R 775 /opt/sonatype-work
+
+#Open /opt/nexus/bin/nexus.rc file and  uncomment run_as_user parameter and set as nexus user.
+vi /opt/nexus/bin/nexus.rc
+run_as_user="nexus"
+
+#Create nexus as a service
+ln -s /opt/nexus/bin/nexus /etc/init.d/nexus
+
+#Switch as a nexus user and start the nexus service as follows.
+sudo su - nexus
+
+#Enable the nexus services
+sudo systemctl enable nexus
+
+#Start the nexus service
+sudo systemctl start nexus
+
+
+# Access Nexus Repo
+ip_address:8081
+```
+# Login to Nexus
+```bash
+# Admin user password is located in 
+/opt/sonatype-work/nexus3/admin.password
+```
+# Change Port
+```bash
+# vim  /opt/nexus/etc/nexus-default.properties
+change the port
+service nexus restart
 ```
