@@ -475,3 +475,70 @@ ip_address:8081
 change the port
 service nexus restart
 ```
+# spring pet clinic
+* Create four servers
+  * Build
+  * Sonar
+    * pom.xml 
+      * edit pom.xml and configure token
+```bash
+  <sonar.host.url>http://34.42.38.27:9000/</sonar.host.url>
+  <sonar.login>sqa_2ae56d82cfdbb7d51e4048d5a4aeb233457e4ce0</sonar.login>
+```
+    * mvn sonar:sonar -D
+    * sonar.properties
+  * Nexus
+    * maven configuration in `conf/setting.xml` and servers
+    * Add the tag in `pom.xml` under `distrubtion management`
+```bash
+* Login to nexus 
+  * settings > repositories > create repository: maven2hosted > name: first-release > version policy: Release >deployment policy: allow redeploy 
+  * and copy the repo url:http://34.41.70.162:8081/repository/first-release/ and configure this url in pom.xml
+  * and create another repository >settings > repositories > create repository: maven2hosted > name: first-release > version policy: sanshot >deployment policy: allow redeploy
+  * copy the url of repo http://34.41.70.162:8081/repository/first-snapshot/
+pom.xml
+  <distributionManagement>
+      <repository>
+          <id>nexus</id>  
+          <name>Release Repos</name>
+          <url>http://34.41.70.162:8081/repository/first-release/</url>
+       </repository>
+      <snapshotRepository>
+          <id>nexus</id>
+          <name>Snapshot Repos</name>
+          <url>http://34.41.70.162:8081/repository/first-snapshot/</url>
+      </snapshotRepository>
+  </distributionManagement>
+```
+  * Tomcat
+```bash
+* Create a one free style job
+  * Configure SCM 
+  * Go to sonar > security > token name: jenkins_token; type: Global;Expiresin : 30 > sqa_2ae56d82cfdbb7d51e4048d5a4aeb233457e4ce0
+  * Copy that token and configure that token in pom.xml file i edit above like that.
+  * configure > build steps maven version:mymaven; Golas: clean package sonar:sonar > build successfull 
+    * And check the sonarqube the project is deployed 
+  * Upload the jar file into the nexus
+    *    configure > build steps maven version:mymaven; Golas: clean deploy sonar:sonar > build faild beacuse we are not configure `settings.xml` file thats why build is faild
+  * 
+[error]
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-deploy-plugin:2.8.2:deploy (default-deploy) on project my-maven-app: Failed to retrieve remote metadata com.sivaacademy.app:my-maven-app:1.0-SNAPSHOT/maven-metadata.xml: Could not transfer metadata com.sivaacademy.app:my-maven-app:1.0-SNAPSHOT/maven-metadata.xml from/to nexus (http://34.41.70.162:8081/repository/first-snapshot/): authentication failed for http://34.41.70.162:8081/repository/first-snapshot/com/sivaacademy/app/my-maven-app/1.0-SNAPSHOT/maven-metadata.xml, status: 401 Unauthorized -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException 
+
+# vi vi /opt/apache-maven-3.8.8/conf/settings.xml 
+</server>
+    -->
+    <server>
+      <id>nexus</id>
+      <username>admin</username>
+      <password>admin@123</password>
+    </server>
+  </servers>
+  * Re run the job and build successfull
+```
