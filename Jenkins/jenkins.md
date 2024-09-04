@@ -180,7 +180,7 @@ pom.xml
 ```
 # Credentials
 * Github: user name and password (Personal Access Token)
-  * github > account > setting > DevSeloper settings > Personal Access Token > token > generate new token (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)
+  * github > account > setting > DevSeloper settings > Personal Access Token > token > generate new token 
 * Linux : SSH key
 * GCP : Json file
 * Sonar : Token
