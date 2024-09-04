@@ -1,0 +1,51 @@
+//any: we will execute the pipeline or stage with any avialable agnet
+pipeline {
+    agent any
+    stages {
+        stage ('First stage') {
+            //name: can be userfriendly name,but needs to be specific for the task performing
+            steps {
+                echo "welocm to first pipeline"
+            }
+
+        }
+    }
+}
+***
+pipeline {
+    agent {
+        label 'mvn-slave'
+    }
+    stages {
+        stage ('HostName') {
+            steps {
+                sh 'hostname -i'
+
+            }
+        }
+    }
+}
+***
+pipeline {
+    // the below agent is at the pipeline level and applies for all stages
+    agent none
+    stages {
+        stage ('build') {
+            //the below agent is for specific stage, 
+            agent {
+                node {
+                    label 'mvn-slave'
+                    customWorkspace "/home/sajith/customsajith"
+                }
+               
+            }
+            steps {
+                echo "print long list"
+                sh 'hostname -i'
+                sh 'cat import.txt'
+                // sh 'git clone https://github.com/spring-projects/spring-petclinic.git '
+                git branch: 'main', url: 'https://github.com/spring-projects/spring-petclinic.git'
+            }
+        }
+    }
+}

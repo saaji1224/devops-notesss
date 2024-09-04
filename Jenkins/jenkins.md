@@ -178,3 +178,275 @@ pom.xml
   </servers>
   * Re run the job and build successfull
 ```
+# Credentials
+* Github: user name and password (Personal Access Token)
+  * github > account > setting > DevSeloper settings > Personal Access Token > token > generate new token (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)
+* Linux : SSH key
+* GCP : Json file
+* Sonar : Token
+* Jenkins > manage jenkins > credentials > Global > Add credentials
+  * kind: user_name with password > scope: Global > user_name: abxxx@gmail.com(mail) > Password : Personal Access Token > ID: saji_github_cred > description: saji_github_cred
+---
+* Install one plugin called `Deploy to container` 
+  * In Post-build Action one option is available`Deploy war/ear to a container` 
+    * 
+![alt text](image-6.png)
+![alt text](image-7.png)
+![alt text](image-8.png)
+![alt text](image-9.png)
+![alt text](image-10.png)
+![alt text](image-11.png)
+![alt text](image-12.png)
+
+`Build Name and Description Setter`
+* `Execute concurrent builds if necessary`: It means one can run multiple times
+# Jenkins Master Slave Configuration:
+![alt text](image-13.png)
+* The jenkins master acts to schedule the jobs,assign slaves and send builds to slaves to execute the jobs.
+* It also monitor the slave state(offline or online) and get back the build result responses from slaves and the display build result on the console output.
+* Jenkins agent can be lanuched in physical machines,virtual machines,kubernetes clusters and with Docker images.
+* Slaves they can be VMs or they can be Containers.
+  * Under the VM they can be Linux machines and Windows machines as well.
+* GCP : Cloud Build
+  * Build,Test and Deploy on our serverless CI/CD platform.
+* Create one machine `slave-1`
+  * Connect to slave-1 and install required packages
+* Connected
+* Agent Program
+* Registor 
+```bash
+# install java
+$ yum install java-11-openjdk.x86_64 -y
+$ cd /opt
+$ sudo yum -y install wget curl
+$ wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+$ tar xvf openjdk-17.0.2_linux-x64_bin.tar.gz
+$ sudo mv jdk-17.0.2/ /opt/jdk-17/
+
+# Install maven
+$ wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+$ tar -xzvf apache-maven-3.8.8-bin.tar.gz
+
+$ vi /etc/profile
+export JAVA_HOME=/opt/jdk-17
+export PATH=$PATH:$JAVA_HOME/bin
+export PATH=$PATH:/opt/apache-maven-3.8.8/bin
+export M2_HOME=/opt/apache-maven-3.8.8
+$ source /etc/profile
+$ mvn --version
+
+## 
+$ adduser sajith
+$ passwd sajith
+1234
+$ vi /etc/ssh/sshd_config
+PasswordAuthentication yes
+$ systemctl restart sshd.service
+# open power shell ssh sajith@ip_address
+$ mkdir jenkins
+$ cd jenkins 
+$ pwd
+/home/sajith/jenkins
+
+```
+  * Go to jenkins master
+    * Nodes > New Node >Node name: javanode;type: permanent agent > create.
+      * number of executors : 2 > Remote root directory : /home/sajith/jenkins > Labels: mvn-slave > Usage : Only Build jobs with label expression matching this node > Launch method : Launch agent via SSH;Host: slave-1_ip;Credentials: create (username:sajith,passwd:1234)> save
+![alt text](image-14.png)
+![alt text](image-15.png)
+![alt text](image-16.png)
+![alt text](image-17.png)
+* Connection is closed 
+![alt text](image-18.png)
+* Change the `Host key verification strategy`
+![alt text](image-19.png)
+  * Save and Relaunch agent
+![alt text](image-20.png)
+![alt text](image-21.png)
+![alt text](image-22.png)
+* Create a one job and select one option that is `Restrict where this project can be run`
+![alt text](image-23.png)
+# Pipelines
+![alt text](image-24.png)
+* Jenkins Pipeline (or simply "Pipeline" with a capital "P") is a suite of plugins which supports implementing and integrating continuous delivery pipelines into Jenkins.
+* Pipeline provides an extensible set of tools for modeling simple-to-complex delivery pipelines "as code" via the Pipeline domain-specific language (DSL) syntax. 
+* Two ways of pipeline
+  * `Declerative` (DSL): New method 
+     * Groovy : I will be using something called Declerative pipelines but if there is a requirement for me to modify something as a coding formate then i might be using something called as `Scripted` as well.
+  * `Scripted` : Old way of writting pipelines (Groovy)
+```bash
+# starting with node then it is called as scripted pipeline
+node {
+
+}
+
+# If it is starting with pipeline then it is called as Declerative
+pipeline {
+
+}
+
+##
+pipeline{
+    agent any
+    stages {
+        stage (`Build`) {
+            steps{
+                echo "Hello!,sajith"
+            }
+        }
+    }
+}
+```
+* Top level statges in pipeline
+![alt text](image-25.png)
+* agent
+  * any
+  * none
+  * label
+  * node
+  * dockerfile
+  * docker
+* stages
+  * stage
+    * steps
+      * script
+        * custom code in groovy
+      * sleep
+      * error
+      * retry
+      * timeout
+    * angent
+    * tools
+    * options
+    * environment
+    * conditionas (when)
+    * parallel
+    * input
+      * message
+      * ok
+      * submitter
+      * submitParameter
+      * parameters
+    * post
+* environment
+  * credentials
+* Options
+  * timeout
+  * retry
+  * timestamps
+  * buildDiscard
+---
+```bash
+//any: we will execute the pipeline or stage with any avialable agnet
+// label: Idealy this is a string which informs our jenkins to run on a particular slave
+// none : When we apply none, no global agent will be picked. The individual stage should specify respective agnet , based on theire reuirements.
+pipeline {
+    agent any
+    stages {
+        stage ('First stage') {
+            //name: can be userfriendly name,but needs to be specific for the task performing
+            steps {
+                echo "welocm to first pipeline"
+            }
+
+        }
+    }
+}
+// 
+### second
+pipeline {
+    agent {
+        label 'mvn-slave'
+    }
+    stages {
+        stage ('HostName') {
+            steps {
+                sh 'hostname -i'
+
+            }
+        }
+    }
+}
+## 
+pipeline {
+    // the below agent is at the pipeline level and applies for all stages
+    agent none
+    stages {
+        stage ('build') {
+            //the below agent is for specific stage, 
+            agent {
+                node {
+                    label 'mvn-slave'
+                    customWorkspace "/home/sajith/customsajith"
+                }
+               
+            }
+            steps {
+                echo "print long list"
+                sh 'hostname -i'
+                sh 'cat import.txt'
+            }
+        }
+    }
+}
+```
+* `Node` : agent { node { label 'labelName' } } behaves the same as agent { label 'labelName' }, but node allows for additional options (such as customWorkspace)
+
+* Multi-Branch : The Multibranch Pipeline project type enables you to implement different Jenkinsfiles for different branches of the same project. In a Multibranch Pipeline project, Jenkins automatically discovers, manages and executes Pipelines for branches which contain a Jenkinsfile in source control.
+  * Create one new repo(private)
+![alt text](image-26.png)
+![alt text](image-27.png)
+![alt text](image-28.png)
+
+* In git hub we create multiple branchs (branch1,branch2,hotfix,release)
+* now we can create `multi-branch` pipeline
+![alt text](image-30.png)
+![alt text](image-29.png)
+![alt text](image-31.png)
+![alt text](image-32.png)
+* Save the pipeline after that it will be scaning the repo
+![alt text](image-33.png)
+![alt text](image-34.png)
+![alt text](image-35.png)
+![alt text](image-36.png)
+* Out of six branches `five` branches having `Jenkinsfile`
+![alt text](image-37.png)
+* It means every 1 min scanning is build
+
+![alt text](image-38.png)
+* Scainig the tags also
+
+
+```bash
+pipeline {
+    agent any
+    environment {
+        // credentials (id), this id should be the same from jenkins credentials
+        Git_hub_cred = credentials ('Git_Hub')
+    }
+    stages {
+        stage ('git-clone') {
+            steps {
+                echo "git hub credentials are ${Git_hub_cred}"
+                echo "user id is ${Git_hub_cred_USR}"
+                echo "password is ${Git_hub_cred_PSW}"
+            }
+        }
+    }
+}
+```
+![alt text](image-39.png)
+
+
+* If we want save some time and if we want to execute the steps parallely then we can write something called "Parallel"
+* I have created a pipeline way that only a particular group of pepoles can allow the pipeline allow to the production using `input`
+
+
+* Authentication : who is trying to authenticate
+* Authorization: scope
+# Creating Users
+* Manage jenkins > Users > Create user 
+![alt text](image-40.png)
+* Restrict that user
+  * manage jenkins > security > Security Realm : Jenkins own user database > Authorization : Matrix-based security > Add user
+![alt text](image-41.png)
