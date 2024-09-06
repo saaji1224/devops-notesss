@@ -107,3 +107,77 @@ pipeline {
         }
     }
 }
+
+// anyOf
+pipeline {
+    agent any
+    environment {
+        Deploy_To = 'production' // these is static 
+    }
+    stages {
+        stage ('BUild') {
+            steps {
+                echo 'welcome to build'
+            }
+        }
+        stage ('Deploy to Dev') {
+            steps {
+                echo "deploying to dev"
+            }
+        }
+        stage ('Deploy to Stage') {
+            when {
+                anyOf {
+                    // any of the below conditions can be satisifed this stage to be executed 
+                    branch 'production'
+                    environment name: 'Deploy_To' , value: 'productions'
+                }
+
+            }
+            steps {
+                echo "deploying to stage"
+            }
+        }
+    }
+}
+
+// i want to execute stage environment when the branch is release/
+pipeline {
+    agent any
+    stages {
+        stage ('build') {
+            when {
+                branch 'release-*'
+            }
+            steps {
+                echo "deploying to stage env"
+            }
+        }
+    }
+}
+
+// i want to execute stage environment when the branch is release-* and tag in prod only
+pipeline {
+    agent any
+    stages {
+        stage ('UAT') {
+            when {
+                branch 'release-*'
+            }
+            steps {
+                echo "deploying to stage env"
+            }
+        }
+        stage ('Prod') {
+            when {
+                // this stage should execute with tag only
+                //buildingTag()
+                // v1.2.3
+                tag pattern: "v\\d{1,2}.\\d{1,2}.\\d{1,2}", comparator: "REGEXP"
+            }
+            steps {
+                echo "deploying to prod"
+            }
+        }
+    }
+}

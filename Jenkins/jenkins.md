@@ -179,7 +179,7 @@ pom.xml
   * Re run the job and build successfull
 ```
 # Credentials
-* Github: user name and password (Personal Access Token)
+* Github: user name and password (Personal Access Token )
   * github > account > setting > DevSeloper settings > Personal Access Token > token > generate new token 
 * Linux : SSH key
 * GCP : Json file
@@ -450,3 +450,57 @@ pipeline {
 * Restrict that user
   * manage jenkins > security > Security Realm : Jenkins own user database > Authorization : Matrix-based security > Add user
 ![alt text](image-41.png)
+```bash
+// lets write a bit complex one with both input and parameters.
+// stage level > input and parameters
+pipeline{
+    agent any
+    stages {
+        stage('Deploying to dev'){
+            steps {
+                echo "deploying to dev env "
+
+            }
+        }
+        stage('Deploy to prod'){
+            options{
+                timeout(time: 60, unit: 'SECONDS')
+            }
+            input{
+                message "should be continue ?"
+                ok "Approved"
+                submitter "sajith"
+                submitterParameter "whoApproved"
+                parameters {
+                    string(name: 'CHANGE_TICKET', defaultValue: 'CH12345', description: 'please enter change ticket number')
+                    booleanParam(name: 'SRE Approved ??', defaultValue: true, description: 'Is approval taken from SRE')
+                    choice(name: 'Release', choices: 'Regular\nhotfix', description: 'what type release is this?' )
+                    text(name: 'Notes', defaultValue: 'enter release notes if any..', description: 'release notes')
+                    password(name: 'myPASSWORD', defaultValue: 'SECRET', description: 'A secret password')
+                    credentials(name: 'myCredentials', description: 'my credentials stored', required: true)
+                }
+            }
+            steps{
+                echo "the change ticket is ${CHANGE_TICKET}"
+                echo " Deploying to production"
+                echo "this is a ${Release} Release"
+                echo "Approved by ${whoApproved}"
+            }
+        }
+    }
+}
+
+// pipeline level >> params.NAME
+// stage level and Inuput level >> parameters > NAME
+```
+![alt text](image-42.png)
+![alt text](image-43.png)
+![alt text](image-44.png)
+
+* Email Configuration in Jenkins
+  * Mailer Plugin
+  * Extended email notification 
+  * Manage jenkins > system > E-mail Notification:[SMTP server: smtp.gmail.com], Advanced:[username:sajithXXXX@gmail.com,Password:past the token,SMTP port: 465 and select Use SSL, Reply-To-Address:sajithXXXX@gmail.com]
+  * Go to gmail > managed account > security > 2-step authentication > get started > app password[name: jenkins, copy the token]
+
+* `pipeline-utility-steps` this plugin is used for the read the pom.xml file

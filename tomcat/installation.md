@@ -53,6 +53,7 @@ ln -s /opt/tomcat9/bin/shutdown.sh /usr/bin/stopTomcat
 # It gives 403 Access Denied 
 cd /opt/tomcat9/webapps/manager/META-INF
 vi context.xml
+# commanet the below line
 <!--
 <Valve className="org.apache.catalina.valves.RemoteAddrValve"
          allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
@@ -61,7 +62,7 @@ vi context.xml
 ```
   * manager-gui --> manager/service status/application deployment 
   * admin-gui  ---> host manager
-* After we save the file now try to access the manager page from the web. You should be able to get login   page
+* After we save the file now try to access the manager page from the web. we should be able to get login   page
 
 * Try to access hostmanger from the we, still u will be getting `403`,
 because we have made a mofification in the `context.xml` file under `manager` only 
