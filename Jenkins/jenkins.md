@@ -504,3 +504,28 @@ pipeline{
   * Go to gmail > managed account > security > 2-step authentication > get started > app password[name: jenkins, copy the token]
 
 * `pipeline-utility-steps` this plugin is used for the read the pom.xml file
+* `Nexus Artifact Uploader` this pluign is used for uploading the artifcats into nexus repo.
+
+
+# shared Libraries
+* Pipeline flow
+![alt text](image-45.png)
+* As Pipeline is adopted for more and more projects in an organization, common patterns are likely to emerge. Oftentimes it is useful to share parts of Pipelines between various projects to reduce redundancies and keep code `DRY`.
+* Pipeline has support for creating `Shared Libraries` which can be defined in external source control repositories and loaded into existing Pipelines.
+* A Shared Library is defined with a name, a source code retrieval method such as by SCM, and optionally a default version. The name should be a short identifier as it will be used in scripts.
+![alt text](image-46.png)
+* `src` : The src directory should look like standard Java source directory structure. This directory is added to the classpath when executing Pipelines.
+* `vars` : The vars directory hosts script files that are exposed as a variable in Pipelines. The name of the file is the name of the variable in the Pipeline. So if you had a file called `vars/log.groovy` with a function like `def info(message)…​` in it, you can access this function like `log.info "hello world"` in the Pipeline. You can put as many functions as you like inside this file. Read on below for more examples and options.
+
+* Create one Github repo
+  * src
+    * com
+      * i27academy
+        * builds
+          * file_name.groovy
+  * vars
+    * 
+* configure share library in jenkins
+  * jenkins > manage jenkins > system > Global Pipeline Libraries
+![alt text](image-47.png)
+![alt text](image-48.png)
